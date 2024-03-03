@@ -1,0 +1,26 @@
+# we create a Docker image from source code
+version: '3.8'
+services:
+  dev-database:
+    image: postgres:15.0
+    container_name: dev-database
+    ports:
+      - '5434:5432' # {host_port (myPC)} : {container_port}
+    # environment variables: db's username, password,...
+    environment:
+      POSTGRES_USER: 'postgresuser'
+      POSTGRES_PASSWORD: 'abc123456password'
+      POSTGRES_DB: 'testdbname'
+    networks:
+      - nestjs-network-name
+networks:
+  nestjs-network-name:
+# docker compose up -d
+# Create container, network,... from "docker composer" file
+# -d: deamon/background mode (run in background)
+
+# docker compose down
+# Stop and remove container, network,... from "docker composer" file (rollback)
+
+# if we want to start only specific service/container
+# docker compose up -d dev-database -d
