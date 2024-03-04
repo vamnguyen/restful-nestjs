@@ -1,5 +1,6 @@
-import { Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
+
 @Controller('auth')
 export class AuthController {
   // The AuthService is automatically created when initializing the AuthController
@@ -7,7 +8,8 @@ export class AuthController {
 
   // some requests from client
   @Post('register')
-  register() {
+  register(@Body() body: any) {
+    console.log(body);
     return this.authService.register();
   }
 
