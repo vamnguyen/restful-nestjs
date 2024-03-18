@@ -17,10 +17,14 @@ model User {
   id             Int      @id @default(autoincrement())
   email          String   @unique
   hashedPassword String
-  firstName      String
-  lastName       String
+  firstName      String?
+  lastName       String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  // relationships
+  notes          Note[]
+
+  @@map("users") // Table name in the database (PostgreSQL)
 }
 
 model Note {
@@ -30,4 +34,9 @@ model Note {
   url         String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  // relationships
+  userId      Int // like a foreign key
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("notes")
 }
