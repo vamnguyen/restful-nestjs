@@ -1,13 +1,19 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthDTO } from './dto';
+import { AuthDTOLogin, AuthDTORegister } from './dto';
 import * as argon from 'argon2';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable({}) // This is dependency injection
 export class AuthService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
 
-  async register(authDTO: AuthDTO) {
+  async register(authDTO: AuthDTORegister) {
     // Hash the password
     const hashedPassword = await argon.hash(authDTO.password);
     try {
@@ -16,8 +22,8 @@ export class AuthService {
         data: {
           email: authDTO.email,
           hashedPassword,
-          firstName: '',
-          lastName: '',
+          firstName: authDTO.firstName,
+          lastName: authDTO.lastName,
         },
         // Only return the id, email, firstName, lastName and createdAt of the user
         select: {
@@ -28,7 +34,8 @@ export class AuthService {
           createdAt: true,
         },
       });
-      return user;
+      // Convert the user to a JWT
+      return await this.signJWT(user.id, user.email);
     } catch (error) {
       if (error.code === 'P2002') {
         throw new ForbiddenException('Email already exists');
@@ -36,7 +43,7 @@ export class AuthService {
     }
   }
 
-  async login(authDTO: AuthDTO) {
+  async login(authDTO: AuthDTOLogin) {
     // find user by email
     const user = await this.prismaService.user.findUnique({
       where: {
@@ -57,7 +64,24 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new ForbiddenException('Invalid password');
     }
+    delete user.hashedPassword;
 
-    return user;
+    // Convert the user to a JWT
+    return await this.signJWT(user.id, user.email);
+  }
+
+  async signJWT(
+    userId: number,
+    email: string,
+  ): Promise<{ accessToken: string }> {
+    const payload = { sub: userId, email };
+    const jwtString = await this.jwtService.signAsync(payload, {
+      expiresIn: '1d',
+      secret: this.configService.get('JWT_SECRET'),
+    });
+
+    return {
+      accessToken: jwtString,
+    };
   }
 }

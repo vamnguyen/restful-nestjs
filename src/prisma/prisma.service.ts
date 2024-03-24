@@ -13,9 +13,5 @@ export class PrismaService extends PrismaClient {
         },
       },
     });
-    console.log(
-      '🚀 ~ PrismaService ~ constructor ~ configService:',
-      configService,
-    );
   }
 }
