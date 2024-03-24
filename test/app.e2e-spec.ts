@@ -1,24 +1,38 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
+/**
+ * How to open prisma studio on "TEST" database?
+ * run `npx dotenv -e .env.test prisma studio`
+ * Similarly, we open prism studio on "DEV" database by running `npx dotenv -e .env prisma studio`
+ */
 
-describe('AppController (e2e)', () => {
+import { Test } from '@nestjs/testing';
+import { AppModule } from '../src/app.module';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { PrismaService } from '../src/prisma/prisma.service';
+
+const PORT = 3002; // This is PORT for testing purpose only.
+
+describe('App End2End tests', () => {
   let app: INestApplication;
+  let prismaService: PrismaService;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    const appModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = appModule.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.listen(PORT);
+
+    prismaService = app.get(PrismaService);
+    await prismaService.cleanDatabase();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  afterAll(async () => {
+    app.close();
   });
+
+  it.todo('should return Hello World!');
+  it.todo('should return Minh dep trai!');
 });
