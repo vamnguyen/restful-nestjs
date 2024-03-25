@@ -25,6 +25,6 @@ export class JWTStrategy extends PassportStrategy(Strategy, 'jwt') {
       },
     });
     delete user.hashedPassword;
-    return JSON.stringify(user);
+    return user;
   }
 }

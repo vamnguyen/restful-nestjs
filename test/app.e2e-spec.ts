@@ -17,6 +17,9 @@ describe('App End2End tests', () => {
   let prismaService: PrismaService;
 
   beforeAll(async () => {
+    /**
+     * Represents the compiled instance of the AppModule for testing purposes.
+     */
     const appModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -102,17 +105,68 @@ describe('App End2End tests', () => {
           .expectStatus(400);
       });
     });
+  });
 
-    describe('User Info', () => {
-      it('should get user info', () => {
-        return pactum
-          .spec()
-          .get(`/users/me`)
-          .withHeaders({
-            Authorization: `Bearer $S{accessToken}`,
-          })
-          .expectStatus(200);
-      });
+  describe('User Info', () => {
+    it('should get user info', () => {
+      return pactum
+        .spec()
+        .get(`/users/me`)
+        .withHeaders({
+          Authorization: `Bearer $S{accessToken}`,
+        })
+        .expectStatus(200)
+        .stores('userId', 'id'); // unnecessary store because we already have the accessToken
+    });
+  });
+
+  describe('Notes', () => {
+    it('Insert a Note', () => {
+      return pactum
+        .spec()
+        .post(`/notes`)
+        .withHeaders({
+          Authorization: `Bearer $S{accessToken}`,
+        })
+        .withBody({
+          title: 'My first note',
+          description: 'This is my first note',
+          url: 'https://google.com',
+        })
+        .expectStatus(201);
+    });
+
+    it('Get all Notes', () => {
+      return pactum
+        .spec()
+        .get(`/notes`)
+        .withHeaders({
+          Authorization: `Bearer $S{accessToken}`,
+        })
+        .expectStatus(200);
+    });
+
+    it('Get a Note by Id', () => {
+      return pactum
+        .spec()
+        .get('/notes')
+        .withHeaders({
+          Authorization: `Bearer $S{accessToken}`,
+        })
+        .withPathParams('id', '$S{noteId01}')
+        .expectStatus(200);
+    });
+
+    it('Delete a Note by Id', () => {
+      return pactum
+        .spec()
+        .delete('/notes')
+        .withHeaders({
+          Authorization: `Bearer $S{accessToken}`,
+        })
+        .withQueryParams('id', '$S{noteId02}')
+        .expectStatus(204)
+        .inspect();
     });
   });
 
